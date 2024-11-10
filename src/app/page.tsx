@@ -5,13 +5,11 @@ import styles from './styles/Home.module.css';
 import { generateSignedUrl } from '../utils/signedUrl';
 
 const HomePage: React.FC = () => {
-  const videoPaths = [
-    '98394773-31f7-40c5-8199-232417fd92d0/playlist.m3u8'
+  const videoIds = [
+    'bc32e38e-32cf-456a-9607-7988caa8297d'
   ];
 
-  const expiration = Math.floor(Date.now() / 1000) + 3600; // 1 hour from now
-
-  const videoUrls = videoPaths.map(path => generateSignedUrl(path, expiration));
+  const videoUrls = videoIds.map(id => generateSignedUrl(id, 3600));
 
   return (
     <div>

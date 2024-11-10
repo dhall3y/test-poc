@@ -1,28 +1,27 @@
 import CryptoJS from 'crypto-js';
 
-
-
 const base64UrlEncode = (str: string): string => {
 	return str.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 };
 
 export const generateSignedUrl = (
-	videoPath: string,
+	videoId: string,
 	expiration: number,
-	remoteIp?: string,
-	queryParams?: { [key: string]: string }
 ): string => {
-	const baseUrl = `https://vz-b8553144-3b2.b-cdn.net/${videoPath}`;
-	const queryParamsString = queryParams
-		? Object.keys(queryParams).sort().map(key => `${key}=${queryParams[key]}`).join('&')
-		: '';
+	const pullZone = "vz-a8ae3f4a-01c";
+	const baseUrl = `https://${pullZone}.b-cdn.net/${videoId}/playlist.m3u8`;
 
-	const signedUrl = `${baseUrl}?expires=${expiration}${queryParamsString ? `&${queryParamsString}` : ''}`;
-	const stringToHash = `${process.env.BUNNY_API_KEY}${signedUrl}${expiration}${remoteIp || ''}${queryParamsString}`;
+	const expires = Math.floor(new Date() / 1000) + expiration;
+	const parsedUrl = new URL(baseUrl);
 
-	const hash = CryptoJS.SHA256(stringToHash);
+	const signaturePath = `/${videoId}/`;
+	const signaturePathParam = `token_path=${signaturePath}`;
+	const parameterDataUrl = "&token_path=" + encodeURIComponent(signaturePath);
+
+	const hashableBase = process.env.BUNNY_API_KEY + signaturePath + expires + signaturePathParam
+	const hash = CryptoJS.SHA256(hashableBase)
 	const base64Hash = CryptoJS.enc.Base64.stringify(hash);
 	const token = base64UrlEncode(base64Hash);
 
-	return `${signedUrl}&token=${token}`;
+	return parsedUrl.protocol+ "//" + parsedUrl.host + "/bcdn_token=" + token + "&expires=" + expires + parameterDataUrl + parsedUrl.pathname;
 };
